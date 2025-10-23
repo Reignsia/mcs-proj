@@ -54,13 +54,14 @@ def mainMenu():
     index = TerminalMenu(options).show()
     return index
 
-def userDashboard():
+def userDashboard(key):
     while True:
         clear()
         panel = Panel(
-            Align.center("User Dashboard"),
+            Align.center("Dashboard"),
             title="[bold bright_cyan]User Panel[/]",
             title_align="center",
+            subtitle=f"Welcome {accounts[key][A_USER]}!",
             border_style="bright_blue",
             style="white on black",
             box=ROUNDED,
@@ -220,6 +221,8 @@ def login():
             break
         else:
             subtitle = "[bold bright_red]Password doesn't match[/]"     
+            
+    return username
 
 def credits():
     panel = Panel(
@@ -241,7 +244,13 @@ def credits():
         width=SCREEN_WIDTH
     )
     print(panel)
-
+    
+def getKey(username):
+    for i, acc in enumerate(accounts):
+        if acc[A_USER] == username:
+            return i
+    return None        
+    
 # -----------------------------------
 #            Exit Screen
 # -----------------------------------
@@ -271,7 +280,8 @@ def main():
             case 1:
                 register()
             case 2:
-                login()
+                username = login()
+                userDashboard(getKey(username))
             case 3:
                 clear()
                 credits()
