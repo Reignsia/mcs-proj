@@ -1,3 +1,6 @@
+#-------------------------
+#   Imports
+#-------------------------
 from rich import print
 from rich.panel import Panel
 from rich.align import Align
@@ -7,11 +10,13 @@ from simple_term_menu import TerminalMenu
 from passlib.hash import pbkdf2_sha256
 from getpass import getpass
 import sys
-import time
 import os
 import random
 from datetime import datetime
 
+#-------------------------
+#   Constants
+#-------------------------
 A_KEY, A_ID, A_USER, A_PASS, A_WALLET, A_BANK, A_CREATED = 0, 1, 2, 3, 4, 5, 6
 SCREEN_WIDTH = 55
 ADMIN_PASS = pbkdf2_sha256.hash("admin")
@@ -19,46 +24,55 @@ TRANSACTION_PAGE_SIZE = 10
 WITHDRAW_DENOMINATIONS = [100, 500, 1000, 10000]
 WITHDRAW_TAX = 0.02
 
+#-------------------------
+#   Data
+#-------------------------
 accounts = [
-    [0, 00000, "admin", ADMIN_PASS, 5000, 0, datetime.now()],
+    [0, 0, "admin", ADMIN_PASS, 5000, 0, datetime.now()],
 ]
 logs = []
 
+#-------------------------
+#   Utility Functions
+#-------------------------
 def clear():
-    if os.name == 'nt':
-        os.system('cls')
-    else:
-        os.system('clear')
+    os.system('cls' if os.name == 'nt' else 'clear')
 
-def mainMenu():
-    panel = Panel(
-        Align.center("Welcome to BanQo"),
-        title="[bold bright_cyan]Main Menu[/]",
+def makePanel(content, title="", subtitle=None, align="center", style="white on black", border_style="bright_blue", width=SCREEN_WIDTH, box=ROUNDED):
+    alignment = Align.center(content) if align=="center" else Align.left(content)
+    return Panel(
+        alignment,
+        title=title,
+        subtitle=subtitle if subtitle else "",
         title_align="center",
-        border_style="bright_blue",
-        style="white on black",
-        box=ROUNDED,
-        width=SCREEN_WIDTH
+        subtitle_align="center",
+        border_style=border_style,
+        style=style,
+        box=box,
+        width=width
     )
-    print(panel)
+
+def getKey(username):
+    for i, acc in enumerate(accounts):
+        if acc[A_USER] == username:
+            return i
+    return None
+
+def pause():
+    input("Press ENTER to continue...")
+
+#-------------------------
+#   Menus
+#-------------------------
+def mainMenu():
+    print(makePanel("Welcome to BanQo", title="[bold bright_cyan]Main Menu[/]"))
     options = ["Exit", "Register", "Login", "Credits"]
-    index = TerminalMenu(options).show()
-    return index
+    return TerminalMenu(options).show()
 
 def userDashboard(key):
     while True:
         clear()
-        panel = Panel(
-            Align.center("Dash"),
-            title="[bold bright_cyan]Dashboard[/]",
-            title_align="center",
-            subtitle=f"Welcome {accounts[key][A_USER]}!",
-            border_style="bright_blue",
-            style="white on black",
-            box=ROUNDED,
-            width=SCREEN_WIDTH
-        )
-        print(panel)
+        print(makePanel("Dash", title="[bold bright_cyan]Dashboard[/]", subtitle=f"Welcome {accounts[key][A_USER]}!", align="center"))
         options = ["Banking Operations", "Deposit", "Withdraw", "Logout"]
         choice = TerminalMenu(options).show()
         if choice == 0:
@@ -68,74 +82,52 @@ def userDashboard(key):
         else:
             clear()
             print(f"You selected: {options[choice]} (logic not implemented)")
-            input("Press Enter to continue...")
+            pause()
 
 def adminDashboard(key):
     while True:
         clear()
-        panel = Panel(
-            Align.center("Admin Dashboard"),
-            title="[bold bright_cyan]Admin Panel[/]",
-            title_align="center",
-            border_style="bright_blue",
-            style="white on black",
-            box=ROUNDED,
-            width=SCREEN_WIDTH
-        )
-        print(panel)
+        print(makePanel("Admin Dashboard", title="[bold bright_cyan]Admin Panel[/]"))
         options = ["View Accounts", "Modify Account", "Transactions", "Logout"]
         choice = TerminalMenu(options).show()
         if choice == 3:
             break
         clear()
         print(f"You selected: {options[choice]} (logic not implemented)")
-        input("Press Enter to continue...")
+        pause()
 
+#-------------------------
+#   Transactions
+#-------------------------
 def printReceipt(user, txType, amount, balance, tax=0):
     txId = random.randint(100000, 999999)
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     clear()
-    panel = Panel(
-        Align.left(
-            f"[bold bright_cyan]BanQo Bank[/bold bright_cyan]\n"
-            f"Date: {now}\n"
-            f"Transaction ID: {txId}\n\n"
-            f"Account: {user}\n"
-            f"Transaction: {txType}\n"
-            f"Amount: ₱{amount:,.2f}\n"
-            + (f"Tax: ₱{tax:,.2f}\n" if tax > 0 else "")
-            + f"Balance: ₱{balance:,.2f}\n"
-            + f"{'-'*SCREEN_WIDTH}"
-        ),
-        title="[bold bright_green]Transaction Receipt[/bold bright_green]",
-        title_align="center",
-        border_style="bright_blue",
-        style="white on black",
-        box=ROUNDED,
-        width=SCREEN_WIDTH
+    info = (
+        f"[bold bright_cyan]BanQo Bank[/bold bright_cyan]\n"
+        f"Date: {now}\n"
+        f"Transaction ID: {txId}\n\n"
+        f"Account: {user}\n"
+        f"Transaction: {txType}\n"
+        f"Amount: ₱{amount:,.2f}\n"
+        + (f"Tax: ₱{tax:,.2f}\n" if tax > 0 else "")
+        + f"Balance: ₱{balance:,.2f}\n"
+        + f"{'-'*SCREEN_WIDTH}"
     )
-    print(panel)
-    time.sleep(3)
+    print(makePanel(info, title="[bold bright_green]Transaction Receipt[/bold bright_green]", align="left"))
+    pause()
 
 def bankingOperations(key):
     subtitle = None
     while True:
         clear()
-        panel = Panel(
-            Align.center("Banking Operations"),
-            title="[bold bright_cyan]Banking Operations[/]",
-            title_align="center",
-            subtitle=subtitle,
-            subtitle_align="center",
-            border_style="bright_blue",
-            style="white on black",
-            box=ROUNDED,
-            width=SCREEN_WIDTH
-        )
-        print(panel)
+        print(makePanel("Banking Operations", title="[bold bright_cyan]Banking Operations[/]", subtitle=subtitle))
         options = ["Account Info", "Deposit", "Withdraw", "Transaction Logs", "Back"]
         choice = TerminalMenu(options).show()
 
+        #-------------------------
+        #   Account Info
+        #-------------------------
         if choice == 0:
             clear()
             acc = accounts[key]
@@ -146,34 +138,17 @@ def bankingOperations(key):
                 f"[bold cyan]Bank Balance:[/bold cyan] ₱{acc[A_BANK]:,.2f}\n"
                 f"[bold cyan]Account Created:[/bold cyan] {acc[A_CREATED].strftime('%Y-%m-%d %H:%M:%S')}\n"
             )
-            panel = Panel(
-                Align.left(info),
-                title="[bold bright_cyan]Account Info[/bold bright_cyan]",
-                title_align="center",
-                border_style="bright_blue",
-                style="white on black",
-                box=ROUNDED,
-                width=SCREEN_WIDTH
-            )
-            print(panel)
-            input("Press Enter to continue...")
+            print(makePanel(info, title="[bold bright_cyan]Account Info[/bold bright_cyan]", align="left"))
+            pause()
 
-        elif choice == 1:  
+        #-------------------------
+        #   Deposit
+        #-------------------------
+        elif choice == 1:
             subtitle = None
             while True:
                 clear()
-                panel = Panel(
-                    Align.center("Enter amount to deposit (q to quit)"),
-                    title="[bold bright_cyan]Deposit[/]",
-                    title_align="center",
-                    subtitle=subtitle,
-                    subtitle_align="center",
-                    border_style="bright_blue",
-                    style="white on black",
-                    box=ROUNDED,
-                    width=SCREEN_WIDTH
-                )
-                print(panel)
+                print(makePanel("Enter amount to deposit (q to quit)", title="[bold bright_cyan]Deposit[/]", subtitle=subtitle))
                 userInput = input(">> ")
                 if userInput.lower() == "q":
                     break
@@ -189,22 +164,14 @@ def bankingOperations(key):
                 except ValueError:
                     subtitle = "[bold bright_red]Enter a valid number[/]"
 
-        elif choice == 2:  # Withdraw
+        #-------------------------
+        #   Withdraw
+        #-------------------------
+        elif choice == 2:
             subtitle = None
             while True:
                 clear()
-                panel = Panel(
-                    Align.center(f"Enter amount to withdraw (q to quit). {WITHDRAW_DENOMINATIONS}"),
-                    title="[bold bright_cyan]Withdraw[/]",
-                    title_align="center",
-                    subtitle=subtitle,
-                    subtitle_align="center",
-                    border_style="bright_blue",
-                    style="white on black",
-                    box=ROUNDED,
-                    width=SCREEN_WIDTH
-                )
-                print(panel)
+                print(makePanel(f"Enter amount to withdraw (q to quit). {WITHDRAW_DENOMINATIONS}", title="[bold bright_cyan]Withdraw[/]", subtitle=subtitle))
                 userInput = input(">> ")
                 if userInput.lower() == "q":
                     break
@@ -227,21 +194,15 @@ def bankingOperations(key):
                 except ValueError:
                     subtitle = "[bold bright_red]Enter a valid number[/]"
 
-        elif choice == 3:  # Transaction Logs
+        #-------------------------
+        #   Transaction Logs
+        #-------------------------
+        elif choice == 3:
             userLogs = [log for log in logs if log[0] == accounts[key][A_USER]]
             if not userLogs:
                 clear()
-                panel = Panel(
-                    Align.center("No transactions yet"),
-                    title="[bold yellow]Info[/]",
-                    title_align="center",
-                    border_style="yellow",
-                    style="white on black",
-                    box=ROUNDED,
-                    width=SCREEN_WIDTH
-                )
-                print(panel)
-                time.sleep(2)
+                print(makePanel("No transactions yet", title="[bold yellow]Info[/]"))
+                pause()
                 continue
             page = 0
             while True:
@@ -260,17 +221,8 @@ def bankingOperations(key):
                 action = TerminalMenu(options).show()
                 if action == 0:
                     if end >= len(userLogs):
-                        panel = Panel(
-                            Align.center("No more pages"),
-                            title="[bold yellow]Info[/]",
-                            title_align="center",
-                            border_style="yellow",
-                            style="white on black",
-                            box=ROUNDED,
-                            width=SCREEN_WIDTH
-                        )
-                        print(panel)
-                        time.sleep(1.5)
+                        print(makePanel("No more pages", title="[bold yellow]Info[/]"))
+                        pause()
                     else:
                         page += 1
                 elif action == 1:
@@ -282,22 +234,14 @@ def bankingOperations(key):
         elif choice == 4:  # Back
             break
 
+#-------------------------
+#   Registration
+#-------------------------
 def register():
     subtitle = None
     while True:
         clear()
-        panel = Panel(
-            Align.center("Type your desired username"),
-            title="[bold bright_cyan]Register[/]",
-            title_align="center",
-            subtitle=subtitle,
-            subtitle_align="center",
-            border_style="bright_blue",
-            style="white on black",
-            box=ROUNDED,
-            width=SCREEN_WIDTH
-        )
-        print(panel)
+        print(makePanel("Type your desired username", title="[bold bright_cyan]Register[/]", subtitle=subtitle))
         username = input(">> ")
         if username.lower() == "q":
             return
@@ -309,21 +253,11 @@ def register():
             subtitle = "[bold bright_red]Username is taken![/]"
         else:
             break
+
     subtitle = None
     while True:
         clear()
-        panel = Panel(
-            Align.center("Type your desired password"),
-            title="[bold bright_cyan]Register[/]",
-            title_align="center",
-            subtitle=subtitle,
-            subtitle_align="center",
-            border_style="bright_blue",
-            style="white on black",
-            box=ROUNDED,
-            width=SCREEN_WIDTH
-        )
-        print(panel)
+        print(makePanel("Type your desired password", title="[bold bright_cyan]Register[/]", subtitle=subtitle))
         password = getpass(">> ")
         if password.lower() == "q":
             return
@@ -335,41 +269,22 @@ def register():
         elif len(password) < 8:
             subtitle = "[bold bright_red]Password must be at 8 characters long[/]"
         else:
-            randomId = "".join([str(random.randint(0,9)) for _ in range(5)])
-            randomId = int(randomId)
+            randomId = int("".join([str(random.randint(0,9)) for _ in range(5)]))
             hashedPassword = pbkdf2_sha256.hash(password)
             accounts.append([len(accounts), randomId, username, hashedPassword, 5000, 0, datetime.now()])
-            randomId = None
             clear()
-            panel = Panel(
-                Align.center(f"{username} registered"),
-                title=f"[bold white]Registration Succesful[/]",
-                title_align="center",
-                border_style="bright_green",
-                style="white on black",
-                box=ROUNDED,
-                width=SCREEN_WIDTH
-            )
-            print(panel)
-            time.sleep(2)
+            print(makePanel(f"{username} registered", title="[bold white]Registration Successful[/]", border_style="bright_green"))
+            pause()
             return
 
+#-------------------------
+#   Login
+#-------------------------
 def login():
     subtitle = None
     while True:
         clear()
-        panel = Panel(
-            Align.center("Type your username"),
-            title="[bold bright_cyan]Login[/]",
-            title_align="center",
-            subtitle=subtitle,
-            subtitle_align="center",
-            border_style="bright_blue",
-            style="white on black",
-            box=ROUNDED,
-            width=SCREEN_WIDTH
-        )
-        print(panel)
+        print(makePanel("Type your username", title="[bold bright_cyan]Login[/]", subtitle=subtitle))
         username = input(">> ")
         if username.lower() == "q":
             return None
@@ -378,21 +293,11 @@ def login():
             break
         else:
             subtitle = "[bold bright_red]Invalid username[/]"
+
     while True:
         clear()
-        panel = Panel(
-            Align.center("Type your password"),
-            title="[bold bright_cyan]Login[/]",
-            title_align="center",
-            subtitle=subtitle,
-            subtitle_align="center",
-            border_style="bright_blue",
-            style="white on black",
-            box=ROUNDED,
-            width=SCREEN_WIDTH
-        )
-        print(panel)
-        password = input(">> ")
+        print(makePanel("Type your password", title="[bold bright_cyan]Login[/]", subtitle=subtitle))
+        password = getpass(">> ")
         if password.lower() == "q":
             return None
         if any(pbkdf2_sha256.verify(password, acc[A_PASS]) for acc in accounts):
@@ -401,52 +306,41 @@ def login():
             subtitle = "[bold bright_red]Password doesn't match[/]"
     return username
 
+#-------------------------
+#   Credits
+#-------------------------
 def credits():
-    panel = Panel(
-        Align.center(
-            "Reign Hart B. Sia\n"
-            "Katrice R. De Guzman\n"
-            "Christian Karl B. Leoncio\n"
-            "Charie Denielle D. Gatmaitan\n"
-            "Dhenver S. Baguio\n"
-            "Clein Jerson T. Valentin\n"
-            "Elden Pascual\n"
-            "Hiroshi Sean K. Gallardo"
-        ),
-        title="[bold bright_cyan]Credits[/]",
-        title_align="center",
-        border_style="bright_blue",
-        style="white on black",
-        box=ROUNDED,
-        width=SCREEN_WIDTH
+    content = (
+        "Reign Hart B. Sia\n"
+        "Katrice R. De Guzman\n"
+        "Christian Karl B. Leoncio\n"
+        "Charie Denielle D. Gatmaitan\n"
+        "Dhenver S. Baguio\n"
+        "Clein Jerson T. Valentin\n"
+        "Elden Pascual\n"
+        "Hiroshi Sean K. Gallardo"
     )
-    print(panel)
+    print(makePanel(content, title="[bold bright_cyan]Credits[/]"))
+    pause()
 
-def getKey(username):
-    for i, acc in enumerate(accounts):
-        if acc[A_USER] == username:
-            return i
-    return None
-
-def exit():
+#-------------------------
+#   Exit
+#-------------------------
+def exitProgram():
     clear()
-    panel = Panel(
-        Align.center("Babyee :p"),
-        title="[bold white on bright_red]You have exited[/]",
-        border_style="bright_red",
-        box=ROUNDED,
-        width=SCREEN_WIDTH
-    )
-    print(panel)
+    print(makePanel("Babyee :p", title="[bold white on bright_red]You have exited[/]"))
     sys.exit()
 
+#-------------------------
+#   Main Loop
+#-------------------------
 def main():
     while True:
         clear()
         choice = mainMenu()
         match choice:
             case 0:
-                exit()
+                exitProgram()
             case 1:
                 register()
             case 2:
@@ -461,10 +355,9 @@ def main():
             case 3:
                 clear()
                 credits()
-                time.sleep(3)
             case _:
                 clear()
                 print("Invalid option. Try again.")
-                time.sleep(2)
+                pause()
 
 main()
