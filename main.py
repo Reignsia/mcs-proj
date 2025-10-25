@@ -13,6 +13,7 @@ import sys
 import os
 import random
 from datetime import datetime
+from google import genai
 
 #-------------------------
 #   Constants
@@ -40,7 +41,7 @@ def clear():
 
 def makePanel(content, title="", subtitle=None, align="center", style="white on black", border_style="bright_blue", width=SCREEN_WIDTH, box=ROUNDED):
     alignment = Align.center(content) if align=="center" else Align.left(content)
-    return Panel(
+    panel = Panel(
         alignment,
         title=title,
         subtitle=subtitle if subtitle else "",
@@ -51,6 +52,7 @@ def makePanel(content, title="", subtitle=None, align="center", style="white on 
         box=box,
         width=width
     )
+    print(panel)
 
 def getKey(username):
     for i, acc in enumerate(accounts):
@@ -61,33 +63,64 @@ def getKey(username):
 def pause():
     input("Press ENTER to continue...")
 
+def chatBot(userInput):
+    client = genai.Client(api_key="AIzaSyAcfY03vSZ_jWpb-UncTgyJAFyg839oRC8")
+    
+    systemInstructions = """
+You are Gemmy, a friendly and professional banking assistant for BanQo Bank.
+You interact with users via a terminal interface and should provide guidance
+only for operations supported in the system.
+
+You can help users with:
+- Checking wallet and bank balances
+- Viewing account information
+- Making deposits
+- Making withdrawals
+- Reviewing transaction logs
+
+Always respond politely, clearly, and concisely.
+Provide step-by-step instructions appropriate for the terminal interface.
+Explain any fees, restrictions, or errors that may occur (like insufficient funds or invalid denominations).
+Do not reference mobile apps, OTPs, cardless withdrawals, or external banking methods.
+Never reveal passwords or any sensitive data.
+Avoid unnecessary chatter and ensure the user feels confident in completing their actions.
+"""
+    
+    prompt = systemInstructions + f"\nUser: {userInput}\nAI:"
+    
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt
+    )
+    
+    return response.text
+
 #-------------------------
 #   Menus
 #-------------------------
 def mainMenu():
-    print(makePanel("Welcome to BanQo", title="[bold bright_cyan]Main Menu[/]"))
+    makePanel("Welcome to BanQo", title="[bold bright_cyan]Main Menu[/]")
     options = ["Exit", "Register", "Login", "Credits"]
     return TerminalMenu(options).show()
 
 def userDashboard(key):
     while True:
         clear()
-        print(makePanel("Dash", title="[bold bright_cyan]Dashboard[/]", subtitle=f"Welcome {accounts[key][A_USER]}!", align="center"))
-        options = ["Banking Operations", "Deposit", "Withdraw", "Logout"]
+        makePanel(f"Welcome {accounts[key][A_USER]}!", title="[bold bright_cyan]Dashboard[/]", align="center")
+        options = ["Banking Operations", "Customer Support", "Withdraw", "Logout"]
         choice = TerminalMenu(options).show()
-        if choice == 0:
-            bankingOperations(key)
-        elif choice == 3:
-            break
-        else:
-            clear()
-            print(f"You selected: {options[choice]} (logic not implemented)")
-            pause()
+        match choice:
+            case 0:
+                bankingOperations(key)
+            case 1:
+                customerSupport(key)
+            case 3:
+                break
 
 def adminDashboard(key):
     while True:
         clear()
-        print(makePanel("Admin Dashboard", title="[bold bright_cyan]Admin Panel[/]"))
+        makePanel("Admin Dashboard", title="[bold bright_cyan]Admin Panel[/]")
         options = ["View Accounts", "Modify Account", "Transactions", "Logout"]
         choice = TerminalMenu(options).show()
         if choice == 3:
@@ -95,7 +128,24 @@ def adminDashboard(key):
         clear()
         print(f"You selected: {options[choice]} (logic not implemented)")
         pause()
-
+        
+def customerSupport(key):
+    while True:
+        clear()
+        makePanel("Gemmy: How can I assist you today?", title="[bold bright_cyan]Customer Support[/bold bright_cyan]")
+        userInput = input(">> ")
+        if userInput.lower() in ["q", "quit", "exit"]:
+            break
+        
+        clear()
+        makePanel("Gemmy is typing...", title="[bold bright_cyan]Customer Support[/bold bright_cyan]")
+        
+        # Get AI response
+        aiResponse = chatBot(userInput)
+        
+        clear()
+        makePanel(f"Gemmy: {aiResponse}", title="[bold bright_cyan]Customer Support[/bold bright_cyan]")
+        input("Press ENTER to ask another question or type 'q' to quit...")
 #-------------------------
 #   Transactions
 #-------------------------
@@ -114,14 +164,14 @@ def printReceipt(user, txType, amount, balance, tax=0):
         + f"Balance: ₱{balance:,.2f}\n"
         + f"{'-'*SCREEN_WIDTH}"
     )
-    print(makePanel(info, title="[bold bright_green]Transaction Receipt[/bold bright_green]", align="left"))
+    makePanel(info, title="[bold bright_green]Transaction Receipt[/bold bright_green]", align="left")
     pause()
 
 def bankingOperations(key):
     subtitle = None
     while True:
         clear()
-        print(makePanel("Banking Operations", title="[bold bright_cyan]Banking Operations[/]", subtitle=subtitle))
+        makePanel(f"Wallet: ₱{accounts[key][A_WALLET]}", title="[bold bright_cyan]Banking Operations[/]", subtitle=subtitle)
         options = ["Account Info", "Deposit", "Withdraw", "Transaction Logs", "Back"]
         choice = TerminalMenu(options).show()
 
@@ -138,7 +188,7 @@ def bankingOperations(key):
                 f"[bold cyan]Bank Balance:[/bold cyan] ₱{acc[A_BANK]:,.2f}\n"
                 f"[bold cyan]Account Created:[/bold cyan] {acc[A_CREATED].strftime('%Y-%m-%d %H:%M:%S')}\n"
             )
-            print(makePanel(info, title="[bold bright_cyan]Account Info[/bold bright_cyan]", align="left"))
+            makePanel(info, title="[bold bright_cyan]Account Info[/bold bright_cyan]", align="left")
             pause()
 
         #-------------------------
@@ -148,7 +198,7 @@ def bankingOperations(key):
             subtitle = None
             while True:
                 clear()
-                print(makePanel("Enter amount to deposit (q to quit)", title="[bold bright_cyan]Deposit[/]", subtitle=subtitle))
+                makePanel("Enter amount to deposit (q to quit)", title="[bold bright_cyan]Deposit[/]", subtitle=subtitle)
                 userInput = input(">> ")
                 if userInput.lower() == "q":
                     break
@@ -171,7 +221,7 @@ def bankingOperations(key):
             subtitle = None
             while True:
                 clear()
-                print(makePanel(f"Enter amount to withdraw (q to quit). {WITHDRAW_DENOMINATIONS}", title="[bold bright_cyan]Withdraw[/]", subtitle=subtitle))
+                makePanel(f"Enter amount to withdraw (q to quit). {WITHDRAW_DENOMINATIONS}", title="[bold bright_cyan]Withdraw[/]", subtitle=subtitle)
                 userInput = input(">> ")
                 if userInput.lower() == "q":
                     break
@@ -201,7 +251,7 @@ def bankingOperations(key):
             userLogs = [log for log in logs if log[0] == accounts[key][A_USER]]
             if not userLogs:
                 clear()
-                print(makePanel("No transactions yet", title="[bold yellow]Info[/]"))
+                makePanel("No transactions yet", title="[bold yellow]Info[/]")
                 pause()
                 continue
             page = 0
@@ -221,7 +271,7 @@ def bankingOperations(key):
                 action = TerminalMenu(options).show()
                 if action == 0:
                     if end >= len(userLogs):
-                        print(makePanel("No more pages", title="[bold yellow]Info[/]"))
+                        makePanel("No more pages", title="[bold yellow]Info[/]")
                         pause()
                     else:
                         page += 1
@@ -241,7 +291,7 @@ def register():
     subtitle = None
     while True:
         clear()
-        print(makePanel("Type your desired username", title="[bold bright_cyan]Register[/]", subtitle=subtitle))
+        makePanel("Type your desired username", title="[bold bright_cyan]Register[/]", subtitle=subtitle)
         username = input(">> ")
         if username.lower() == "q":
             return
@@ -257,7 +307,7 @@ def register():
     subtitle = None
     while True:
         clear()
-        print(makePanel("Type your desired password", title="[bold bright_cyan]Register[/]", subtitle=subtitle))
+        makePanel("Type your desired password", title="[bold bright_cyan]Register[/]", subtitle=subtitle)
         password = getpass(">> ")
         if password.lower() == "q":
             return
@@ -273,7 +323,7 @@ def register():
             hashedPassword = pbkdf2_sha256.hash(password)
             accounts.append([len(accounts), randomId, username, hashedPassword, 5000, 0, datetime.now()])
             clear()
-            print(makePanel(f"{username} registered", title="[bold white]Registration Successful[/]", border_style="bright_green"))
+            makePanel(f"{username} registered", title="[bold white]Registration Successful[/]", border_style="bright_green")
             pause()
             return
 
@@ -284,7 +334,7 @@ def login():
     subtitle = None
     while True:
         clear()
-        print(makePanel("Type your username", title="[bold bright_cyan]Login[/]", subtitle=subtitle))
+        makePanel("Type your username", title="[bold bright_cyan]Login[/]", subtitle=subtitle)
         username = input(">> ")
         if username.lower() == "q":
             return None
@@ -296,7 +346,7 @@ def login():
 
     while True:
         clear()
-        print(makePanel("Type your password", title="[bold bright_cyan]Login[/]", subtitle=subtitle))
+        makePanel("Type your password", title="[bold bright_cyan]Login[/]", subtitle=subtitle)
         password = getpass(">> ")
         if password.lower() == "q":
             return None
@@ -320,7 +370,7 @@ def credits():
         "Elden Pascual\n"
         "Hiroshi Sean K. Gallardo"
     )
-    print(makePanel(content, title="[bold bright_cyan]Credits[/]"))
+    makePanel(content, title="[bold bright_cyan]Credits[/]")
     pause()
 
 #-------------------------
@@ -328,7 +378,7 @@ def credits():
 #-------------------------
 def exitProgram():
     clear()
-    print(makePanel("Babyee :p", title="[bold white on bright_red]You have exited[/]"))
+    makePanel("Babyee :p", title="[bold white on bright_red]You have exited[/]")
     sys.exit()
 
 #-------------------------
