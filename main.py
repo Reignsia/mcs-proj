@@ -54,11 +54,22 @@ def makePanel(content, title="", subtitle=None, align="center", style="white on 
     )
     print(panel)
 
-def getKey(username):
+def getKey(index, value):
     for i, acc in enumerate(accounts):
-        if acc[A_USER] == username:
+        if acc[index] == value:
             return i
     return None
+
+def getAccount(key, index):
+    if 0 <= key < len(accounts):
+        return accounts[key][index]
+    return None
+
+def updateAccount(key, index, newValue):
+    if 0 <= key < len(accounts):
+        accounts[key][index] = newValue
+        return True
+    return False
 
 def pause():
     input("Press ENTER to continue...")
@@ -68,22 +79,11 @@ def chatBot(userInput):
     
     systemInstructions = """
 You are Gemmy, a friendly and professional banking assistant for BanQo Bank.
-You interact with users via a terminal interface and should provide guidance
-only for operations supported in the system.
-
-You can help users with:
-- Checking wallet and bank balances
-- Viewing account information
-- Making deposits
-- Making withdrawals
-- Reviewing transaction logs
-
 Always respond politely, clearly, and concisely.
-Provide step-by-step instructions appropriate for the terminal interface.
-Explain any fees, restrictions, or errors that may occur (like insufficient funds or invalid denominations).
-Do not reference mobile apps, OTPs, cardless withdrawals, or external banking methods.
-Never reveal passwords or any sensitive data.
-Avoid unnecessary chatter and ensure the user feels confident in completing their actions.
+Do not reveal any sensitive user information or passwords.
+Guide users on account info, wallet balance, deposits, withdrawals, and transaction logs.
+Provide step-by-step instructions if necessary, and maintain a helpful and reassuring tone.
+Avoid unnecessary chatter, and always ensure the user feels confident about their banking actions.
 """
     
     prompt = systemInstructions + f"\nUser: {userInput}\nAI:"
