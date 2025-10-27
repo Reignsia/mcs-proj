@@ -107,14 +107,19 @@ def userDashboard(key):
     while True:
         clear()
         makePanel(f"Welcome {accounts[key][A_USER]}!", title="[bold bright_cyan]Dashboard[/]", align="center")
-        options = ["Banking Operations", "Customer Support", "Withdraw", "Logout"]
+        options = ["Banking Operations", "Customer Support", "Withdraw", "Change Password", "Logout"]
         choice = TerminalMenu(options).show()
         match choice:
             case 0:
                 bankingOperations(key)
             case 1:
                 customerSupport(key)
+            case 2:
+            
+                pass
             case 3:
+                changePassword(key)
+            case 4:
                 break
 
 def adminDashboard(key):
@@ -140,12 +145,12 @@ def customerSupport(key):
         clear()
         makePanel("Gemmy is typing...", title="[bold bright_cyan]Customer Support[/bold bright_cyan]")
         
-        # Get AI response
         aiResponse = chatBot(userInput)
         
         clear()
         makePanel(f"Gemmy: {aiResponse}", title="[bold bright_cyan]Customer Support[/bold bright_cyan]")
         input("Press ENTER to ask another question or type 'q' to quit...")
+
 #-------------------------
 #   Transactions
 #-------------------------
@@ -167,17 +172,17 @@ def printReceipt(user, txType, amount, balance, tax=0):
     makePanel(info, title="[bold bright_green]Transaction Receipt[/bold bright_green]", align="left")
     pause()
 
+#-------------------------
+#   Banking Operations
+#-------------------------
 def bankingOperations(key):
     subtitle = None
     while True:
         clear()
         makePanel(f"Wallet: ₱{accounts[key][A_WALLET]}", title="[bold bright_cyan]Banking Operations[/]", subtitle=subtitle)
-        options = ["Account Info", "Deposit", "Withdraw", "Transaction Logs", "Back"]
+        options = ["Account Info", "Deposit", "Withdraw", "Transfer Funds", "Transaction Logs", "Back"]
         choice = TerminalMenu(options).show()
 
-        #-------------------------
-        #   Account Info
-        #-------------------------
         if choice == 0:
             clear()
             acc = accounts[key]
@@ -191,9 +196,7 @@ def bankingOperations(key):
             makePanel(info, title="[bold bright_cyan]Account Info[/bold bright_cyan]", align="left")
             pause()
 
-        #-------------------------
-        #   Deposit
-        #-------------------------
+        # Deposit
         elif choice == 1:
             subtitle = None
             while True:
@@ -202,7 +205,9 @@ def bankingOperations(key):
                 userInput = input(">> ")
                 if userInput.lower() == "q":
                     break
-                try:
+                if not userInput.isdigit():
+                    subtitle = "[bold bright_red]Enter a valid number[/]"
+                else:
                     amount = float(userInput)
                     if amount <= 0:
                         subtitle = "[bold bright_red]Amount must be greater than 0[/]"
@@ -211,12 +216,8 @@ def bankingOperations(key):
                         logs.append([accounts[key][A_USER], "Deposit", amount, datetime.now()])
                         printReceipt(accounts[key][A_USER], "Deposit", amount, accounts[key][A_WALLET])
                         break
-                except ValueError:
-                    subtitle = "[bold bright_red]Enter a valid number[/]"
 
-        #-------------------------
-        #   Withdraw
-        #-------------------------
+        # Withdraw
         elif choice == 2:
             subtitle = None
             while True:
@@ -225,7 +226,9 @@ def bankingOperations(key):
                 userInput = input(">> ")
                 if userInput.lower() == "q":
                     break
-                try:
+                if not userInput.isdigit():
+                    subtitle = "[bold bright_red]Enter a valid number[/]"
+                else:
                     amount = int(userInput)
                     if amount <= 0:
                         subtitle = "[bold bright_red]Amount must be greater than 0[/]"
@@ -241,13 +244,55 @@ def bankingOperations(key):
                             logs.append([accounts[key][A_USER], "Withdraw", amount, datetime.now()])
                             printReceipt(accounts[key][A_USER], "Withdraw", amount, accounts[key][A_WALLET], tax)
                             break
-                except ValueError:
-                    subtitle = "[bold bright_red]Enter a valid number[/]"
 
-        #-------------------------
-        #   Transaction Logs
-        #-------------------------
+        # Transfer Funds
         elif choice == 3:
+            subtitle = None
+            while True:
+                clear()
+                makePanel("Enter recipient account ID (q to quit)", title="[bold bright_cyan]Transfer Funds[/]", subtitle=subtitle)
+                targetInput = input(">> ")
+                if targetInput.lower() == "q":
+                    break
+                if not targetInput.isdigit():
+                    subtitle = "[bold bright_red]Enter a valid numeric ID[/]"
+                    continue
+
+                targetId = int(targetInput)
+                targetKey = getKey(A_ID, targetId)
+                if targetKey is None:
+                    subtitle = "[bold bright_red]Account not found[/]"
+                    continue
+                if targetKey == key:
+                    subtitle = "[bold bright_red]You cannot transfer to yourself[/]"
+                    continue
+
+                clear()
+                makePanel(f"Enter amount to transfer to {getAccount(targetKey, A_USER)} (q to quit)", title="[bold bright_cyan]Transfer Funds[/]", subtitle=subtitle)
+                amountInput = input(">> ")
+                if amountInput.lower() == "q":
+                    break
+                if not amountInput.isdigit():
+                    subtitle = "[bold bright_red]Enter a valid amount[/]"
+                    continue
+
+                amount = float(amountInput)
+                if amount <= 0:
+                    subtitle = "[bold bright_red]Amount must be greater than 0[/]"
+                elif amount > getAccount(key, A_WALLET):
+                    subtitle = "[bold bright_red]Insufficient balance[/]"
+                else:
+                    senderBalance = getAccount(key, A_WALLET) - amount
+                    receiverBalance = getAccount(targetKey, A_WALLET) + amount
+                    updateAccount(key, A_WALLET, senderBalance)
+                    updateAccount(targetKey, A_WALLET, receiverBalance)
+                    logs.append([accounts[key][A_USER], f"Transfer to {accounts[targetKey][A_USER]}", amount, datetime.now()])
+                    logs.append([accounts[targetKey][A_USER], f"Received from {accounts[key][A_USER]}", amount, datetime.now()])
+                    printReceipt(accounts[key][A_USER], f"Transfer to {accounts[targetKey][A_USER]}", amount, senderBalance)
+                    break
+
+        # Transaction Logs
+        elif choice == 4:
             userLogs = [log for log in logs if log[0] == accounts[key][A_USER]]
             if not userLogs:
                 clear()
@@ -281,7 +326,7 @@ def bankingOperations(key):
                 else:
                     break
 
-        elif choice == 4:  # Back
+        elif choice == 5:  # Back
             break
 
 #-------------------------
@@ -356,6 +401,46 @@ def login():
             subtitle = "[bold bright_red]Password doesn't match[/]"
     return username
 
+def changePassword(key):
+    subtitle = None
+    while True:
+        clear()
+        makePanel("Enter your current password (q to cancel)", title="[bold bright_cyan]Change Password[/]", subtitle=subtitle)
+        currentPass = getpass(">> ")
+        if currentPass.lower() == "q":
+            return
+        if not pbkdf2_sha256.verify(currentPass, getAccount(key, A_PASS)):
+            subtitle = "[bold bright_red]Incorrect current password[/]"
+            continue
+
+        clear()
+        makePanel("Enter new password (q to cancel)", title="[bold bright_cyan]Change Password[/]")
+        newPass = getpass(">> ")
+        if newPass.lower() == "q":
+            return
+
+        hasLetter = any(c.isalpha() for c in newPass)
+        hasDigit = any(c.isdigit() for c in newPass)
+        hasSymbol = any(not c.isalnum() for c in newPass)
+        if len(newPass) < 8:
+            subtitle = "[bold bright_red]Password must be at least 8 characters long[/]"
+            continue
+        if not (hasLetter and hasDigit and hasSymbol):
+            subtitle = "[bold bright_red]Must contain letters, numbers, and symbols[/]"
+            continue
+
+        confirmPass = getpass("Confirm new password >> ")
+        if newPass != confirmPass:
+            subtitle = "[bold bright_red]Passwords do not match[/]"
+            continue
+
+        updateAccount(key, A_PASS, pbkdf2_sha256.hash(newPass))
+        clear()
+        makePanel("Password successfully changed!", title="[bold bright_green]Success[/]")
+        logs.append([getAccount(key, A_USER), "Password Change", 0, datetime.now()])
+        pause()
+        return
+        
 #-------------------------
 #   Credits
 #-------------------------
@@ -397,7 +482,7 @@ def main():
                 username = login()
                 if username is None:
                     continue
-                key = getKey(username)
+                key = getKey(A_USER, username)
                 if key == 0:
                     adminDashboard(key)
                 else:
