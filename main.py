@@ -107,7 +107,7 @@ def userDashboard(key):
     while True:
         clear()
         makePanel(f"Welcome {accounts[key][A_USER]}!", title="[bold bright_cyan]Dashboard[/]", align="center")
-        options = ["Banking Operations", "Customer Support", "Withdraw", "Change Password", "Logout"]
+        options = ["Banking Operations", "Customer Support", "Change Password", "Logout"]
         choice = TerminalMenu(options).show()
         match choice:
             case 0:
@@ -115,11 +115,8 @@ def userDashboard(key):
             case 1:
                 customerSupport(key)
             case 2:
-               
-                pass
+               changePassword(key)
             case 3:
-                changePassword(key)
-            case 4:
                 break
 
 def adminDashboard(key):
