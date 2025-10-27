@@ -115,7 +115,7 @@ def userDashboard(key):
             case 1:
                 customerSupport(key)
             case 2:
-            
+               
                 pass
             case 3:
                 changePassword(key)
@@ -183,6 +183,7 @@ def bankingOperations(key):
         options = ["Account Info", "Deposit", "Withdraw", "Transfer Funds", "Transaction Logs", "Back"]
         choice = TerminalMenu(options).show()
 
+        
         if choice == 0:
             clear()
             acc = accounts[key]
@@ -196,7 +197,7 @@ def bankingOperations(key):
             makePanel(info, title="[bold bright_cyan]Account Info[/bold bright_cyan]", align="left")
             pause()
 
-        # Deposit
+        
         elif choice == 1:
             subtitle = None
             while True:
@@ -217,7 +218,7 @@ def bankingOperations(key):
                         printReceipt(accounts[key][A_USER], "Deposit", amount, accounts[key][A_WALLET])
                         break
 
-        # Withdraw
+       
         elif choice == 2:
             subtitle = None
             while True:
@@ -245,7 +246,7 @@ def bankingOperations(key):
                             printReceipt(accounts[key][A_USER], "Withdraw", amount, accounts[key][A_WALLET], tax)
                             break
 
-        # Transfer Funds
+       
         elif choice == 3:
             subtitle = None
             while True:
@@ -290,8 +291,7 @@ def bankingOperations(key):
                     logs.append([accounts[targetKey][A_USER], f"Received from {accounts[key][A_USER]}", amount, datetime.now()])
                     printReceipt(accounts[key][A_USER], f"Transfer to {accounts[targetKey][A_USER]}", amount, senderBalance)
                     break
-
-        # Transaction Logs
+                    
         elif choice == 4:
             userLogs = [log for log in logs if log[0] == accounts[key][A_USER]]
             if not userLogs:
@@ -326,7 +326,7 @@ def bankingOperations(key):
                 else:
                     break
 
-        elif choice == 5:  # Back
+        elif choice == 5:  
             break
 
 #-------------------------
@@ -336,7 +336,7 @@ def register():
     subtitle = None
     while True:
         clear()
-        makePanel("Type your desired username", title="[bold bright_cyan]Register[/]", subtitle=subtitle)
+        makePanel("Type your desired username (q to cancel)", title="[bold bright_cyan]Register[/]", subtitle=subtitle)
         username = input(">> ")
         if username.lower() == "q":
             return
@@ -352,7 +352,7 @@ def register():
     subtitle = None
     while True:
         clear()
-        makePanel("Type your desired password", title="[bold bright_cyan]Register[/]", subtitle=subtitle)
+        makePanel("Type your desired password (q to cancel)", title="[bold bright_cyan]Register[/]", subtitle=subtitle)
         password = getpass(">> ")
         if password.lower() == "q":
             return
@@ -379,7 +379,7 @@ def login():
     subtitle = None
     while True:
         clear()
-        makePanel("Type your username", title="[bold bright_cyan]Login[/]", subtitle=subtitle)
+        makePanel("Type your username (q to cancel)", title="[bold bright_cyan]Login[/]", subtitle=subtitle)
         username = input(">> ")
         if username.lower() == "q":
             return None
@@ -391,7 +391,7 @@ def login():
 
     while True:
         clear()
-        makePanel("Type your password", title="[bold bright_cyan]Login[/]", subtitle=subtitle)
+        makePanel("Type your password (q to cancel)", title="[bold bright_cyan]Login[/]", subtitle=subtitle)
         password = getpass(">> ")
         if password.lower() == "q":
             return None
