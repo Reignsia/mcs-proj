@@ -29,7 +29,7 @@ WITHDRAW_TAX = 0.02
 #   Data
 #-------------------------
 accounts = [
-    [0, 0, "admin", ADMIN_PASS, 5000, 0, datetime.now()],
+    [0, 00000, "admin", ADMIN_PASS, 5000, 0, datetime.now()],
 ]
 logs = []
 
@@ -106,7 +106,7 @@ def mainMenu():
 def userDashboard(key):
     while True:
         clear()
-        makePanel(f"Welcome {accounts[key][A_USER]}!", title="[bold bright_cyan]Dashboard[/]", align="center")
+        makePanel(f"Welcome {accounts[key][A_USER]}!", title="[bold bright_cyan]User Dashboard[/]", align="center")
         options = ["Banking Operations", "Customer Support", "Change Password", "Logout"]
         choice = TerminalMenu(options).show()
         match choice:
@@ -122,15 +122,179 @@ def userDashboard(key):
 def adminDashboard(key):
     while True:
         clear()
-        makePanel("Admin Dashboard", title="[bold bright_cyan]Admin Panel[/]")
-        options = ["View Accounts", "Modify Account", "Transactions", "Logout"]
+        makePanel(f"Welcome {accounts[key][A_USER]}!", title="[bold bright_cyan]Admin Dashboard[/]")
+        options = [
+            "Account Management", 
+            "Activity Logs", 
+            "Configuration",
+            "Logout"
+        ]
         choice = TerminalMenu(options).show()
-        if choice == 3:
-            break
-        clear()
-        print(f"You selected: {options[choice]} (logic not implemented)")
-        pause()
         
+        match choice:
+            case 0:
+                accountManagement()
+            case 1:
+                viewActivityLogs()
+            case 2:
+                systemSettings()
+            case 3:
+                break
+
+def accountManagement():
+    while True:
+        clear()
+        options = ["View Accounts", "Search Account", "Edit Account", "Delete Account", "Logout"]
+        makePanel("Account Management", title="[bold bright_cyan]Admin Dashboard[/bold bright_cyan]", align="center")
+        choice = TerminalMenu(options).show()
+
+        match choice:
+            case 0:
+                clear()
+                table = Table(title="All Accounts", box=ROUNDED, width=SCREEN_WIDTH, title_justify="center")
+                table.add_column("Id", justify="center", style="magenta")
+                table.add_column("Username", justify="center", style="yellow")
+                table.add_column("Wallet", justify="right", style="green")
+                table.add_column("Bank", justify="right", style="green")
+                table.add_column("Created", justify="center", style="bright_blue")
+                for acc in accounts:
+                    table.add_row(
+                        str(acc[A_ID]),
+                        acc[A_USER],
+                        f"₱{acc[A_WALLET]:,.2f}",
+                        f"₱{acc[A_BANK]:,.2f}",
+                        acc[A_CREATED].strftime("%Y-%m-%d %H:%M:%S")
+                    )
+                clear()
+                makePanel(table, align="center")
+                pause()
+
+            case 1:
+                while True:
+                    clear()
+                    makePanel("Enter account ID to search (q to cancel)", title="[bold bright_cyan]Search Account[/bold bright_cyan]", align="center")
+                    userInput = input(">> ")
+                    if userInput.lower() == "q":
+                        break
+                    if not userInput.isdigit():
+                        clear()
+                        makePanel("Invalid ID. Enter account ID to search (q to cancel)", title="[bold bright_cyan]Search Account[/bold bright_cyan]", align="center")
+                        pause()
+                        continue
+                    userId = int(userInput)
+                    key = getKey(A_ID, userId)
+                    if key is None:
+                        clear()
+                        makePanel("Account not found. Enter account ID to search (q to cancel)", title="[bold bright_cyan]Search Account[/bold bright_cyan]", align="center")
+                        pause()
+                        continue
+                    acc = accounts[key]
+                    clear()
+                    makePanel(
+                        f"Id: {acc[A_ID]}\nUsername: {acc[A_USER]}\nWallet: ₱{acc[A_WALLET]:,.2f}\nBank: ₱{acc[A_BANK]:,.2f}\nCreated: {acc[A_CREATED].strftime('%Y-%m-%d %H:%M:%S')}",
+                        title="[bold bright_cyan]Account Details[/bold bright_cyan]",
+                        align="center"
+                    )
+                    pause()
+                    break
+
+            case 2:
+                while True:
+                    clear()
+                    makePanel("Enter account ID to edit (q to cancel)", title="[bold bright_cyan]Edit Account[/bold bright_cyan]", align="center")
+                    userInput = input(">> ")
+                    if userInput.lower() == "q":
+                        break
+                    if not userInput.isdigit():
+                        clear()
+                        makePanel("Invalid ID. Enter account ID to edit (q to cancel)", title="[bold bright_cyan]Edit Account[/bold bright_cyan]", align="center")
+                        pause()
+                        continue
+                    userId = int(userInput)
+                    key = getKey(A_ID, userId)
+                    if key is None:
+                        clear()
+                        makePanel("Account not found. Enter account ID to edit (q to cancel)", title="[bold bright_cyan]Edit Account[/bold bright_cyan]", align="center")
+                        pause()
+                        continue
+                    acc = accounts[key]
+                    editOptions = ["Username", "Wallet Balance", "Bank Balance", "Password", "Cancel"]
+                    editChoice = TerminalMenu(editOptions).show()
+                    match editChoice:
+                        case 0:
+                            clear()
+                            makePanel(f"Enter new username for {acc[A_USER]} (q to cancel)", title="[bold bright_cyan]Edit Username[/bold bright_cyan]", align="center")
+                            newUsername = input(">> ")
+                            if newUsername.lower() != "q" and all(a[A_USER] != newUsername for a in accounts):
+                                updateAccount(key, A_USER, newUsername)
+                                clear()
+                                makePanel("Username updated!", title="[bold bright_green]Success[/bold green]", align="center")
+                                pause()
+                        case 1:
+                            clear()
+                            makePanel(f"Enter new wallet balance for {acc[A_USER]} (q to cancel)", title="[bold bright_cyan]Edit Wallet[/bold bright_cyan]", align="center")
+                            newWallet = input(">> ")
+                            if newWallet.lower() != "q" and newWallet.replace(".", "", 1).isdigit():
+                                updateAccount(key, A_WALLET, float(newWallet))
+                                clear()
+                                makePanel("Wallet updated!", title="[bold bright_green]Success[/bold green]", align="center")
+                                pause()
+                        case 2:
+                            clear()
+                            makePanel(f"Enter new bank balance for {acc[A_USER]} (q to cancel)", title="[bold bright_cyan]Edit Bank[/bold bright_cyan]", align="center")
+                            newBank = input(">> ")
+                            if newBank.lower() != "q" and newBank.replace(".", "", 1).isdigit():
+                                updateAccount(key, A_BANK, float(newBank))
+                                clear()
+                                makePanel("Bank updated!", title="[bold bright_green]Success[/bold green]", align="center")
+                                pause()
+                        case 3:
+                            clear()
+                            makePanel(f"Enter new password for {acc[A_USER]} (q to cancel)", title="[bold bright_cyan]Edit Password[/bold bright_cyan]", align="center")
+                            newPass = getpass(">> ")
+                            if newPass:
+                                updateAccount(key, A_PASS, pbkdf2_sha256.hash(newPass))
+                                clear()
+                                makePanel("Password updated!", title="[bold bright_green]Success[/bold green]", align="center")
+                                pause()
+                        case 4:
+                            break
+                    break
+
+            case 3:
+                while True:
+                    clear()
+                    makePanel("Enter account ID to delete (q to cancel)", title="[bold bright_cyan]Delete Account[/bold bright_cyan]", align="center")
+                    userInput = input(">> ")
+                    if userInput.lower() == "q":
+                        break
+                    if not userInput.isdigit():
+                        clear()
+                        makePanel("Invalid ID. Enter account ID to delete (q to cancel)", title="[bold bright_cyan]Delete Account[/bold bright_cyan]", align="center")
+                        pause()
+                        continue
+                    userId = int(userInput)
+                    key = getKey(A_ID, userId)
+                    if key is None or accounts[key][A_ID] == 0:
+                        clear()
+                        makePanel("Cannot delete this account. Enter account ID to delete (q to cancel)", title="[bold bright_cyan]Delete Account[/bold bright_cyan]", align="center")
+                        pause()
+                        continue
+                    clear()
+                    makePanel(f"Are you sure you want to delete {accounts[key][A_USER]}? (y/n)", title="[bold bright_cyan]Confirm Delete[/bold bright_cyan]", align="center")
+                    confirm = input(">> ")
+                    if confirm.lower() == "y":
+                        del accounts[key]
+                        clear()
+                        makePanel("Account deleted!", title="[bold bright_green]Success[/bold green]", align="center")
+                        pause()
+                        break
+                    else:
+                        break
+
+            case 4:
+                break 
+                        
 def customerSupport(key):
     while True:
         clear()
