@@ -1,5 +1,5 @@
 # =========================
-# PART 1: Imports & Constants
+# PART 1: Imports & Constants (Elden)
 # =========================
 from rich import print
 from rich.panel import Panel
@@ -38,7 +38,7 @@ logs = []
 # =========================
 
 # =========================
-# PART 2: Utility Functions
+# PART 2: Utility Functions (Charie)
 # =========================
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -106,7 +106,7 @@ def reindexAccounts():
 # =========================
 
 # =========================
-# PART 3: AI ChatBot
+# PART 3: AI ChatBot (Dhenver)
 # =========================
 def chatBot(userInput):
     client = genai.Client(api_key="AIzaSyAcfY03vSZ_jWpb-UncTgyJAFyg839oRC8")
@@ -129,7 +129,7 @@ Avoid unnecessary chatter, and always ensure the user feels confident about thei
 # =========================
 
 # =========================
-# PART 4: Main Menus & Navigation
+# PART 4: Main Menus & Navigation (CJ)
 # =========================
 def mainMenu():
     makePanel("Welcome to BanQo", title="[bold bright_cyan]Main Menu[/]")
@@ -179,7 +179,7 @@ def adminDashboard(key):
 # =========================
 
 # =========================
-# PART 5: Admin Account Management
+# PART 5: Admin Account Management (Reign)
 # =========================
 def accountManagement(adminKey):
     while True:
@@ -332,7 +332,7 @@ def accountManagement(adminKey):
 # =========================
 
 # =========================
-# PART 6: User Operations
+# PART 6: User Operations (Hiroshi)
 # =========================
 def customerSupport(key):
     while True:
@@ -508,7 +508,7 @@ def bankingOperations(key):
 # =========================
 
 # =========================
-# PART 7: Registration, Login, Password, Credits, Exit
+# PART 7: Registration, Login, Password, Credits, Exit (Karl)
 # =========================
 def register():
     subtitle = None
@@ -645,7 +645,7 @@ def exitProgram():
 # =========================
 
 # =========================
-# PART 8: Logs, Settings, Main Loop
+# PART 8: Logs, Settings, Main Loop (Kathrice)
 # =========================
 def viewActivityLogs(adminKey):
     if not logs:
