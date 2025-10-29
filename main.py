@@ -80,8 +80,8 @@ def pause():
 
 def addLog(user, action, amount=0):
     actionStr = str(action).upper()
-    isAdminUser = user == accounts[0][A_USER]
-    if isAdminUser:
+    isAdmin = user == accounts[0][A_USER]
+    if isAdmin:
         if "DELETE ACCOUNT" in actionStr:
             act = "DELETE ACCOUNT"
         elif "EDIT ACCOUNT" in actionStr or "USERNAME" in actionStr or "PASSWORD" in actionStr or "WALLET" in actionStr or "BANK" in actionStr or actionStr.startswith("EDIT"):
@@ -335,18 +335,20 @@ def accountManagement(adminKey):
 # PART 6: User Operations (Hiroshi)
 # =========================
 def customerSupport(key):
+    content = "Gemmy: Hello! I'm Gemmy, I'll be your assistant today. How can I help you?"
     while True:
         clear()
-        makePanel("Gemmy: How can I assist you today?", title="[bold bright_cyan]Customer Support[/]")
+        makePanel(f"{content}", title="[bold bright_cyan]Customer Support[/]")
         userInput = input(">> ")
         if userInput.lower() in ["q", "quit", "exit"]:
             break
         clear()
         makePanel("Gemmy is typing...", title="[bold bright_cyan]Customer Support[/]")
         aiResponse = chatBot(userInput)
+        content = str(aiResponse)
         clear()
         makePanel(f"Gemmy: {aiResponse}", title="[bold bright_cyan]Customer Support[/]")
-        input("Press ENTER to ask another question or type 'q' to quit...")
+       
 
 def printReceipt(user, txType, amount, balance, tax=0):
     txId = random.randint(100000, 999999)
