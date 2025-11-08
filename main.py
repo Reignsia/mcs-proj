@@ -25,12 +25,14 @@ A_CREATED = 6
 
 SCREEN_WIDTH = 70
 ADMIN_PASS = pbkdf2_sha256.hash("admin")
+USER_PASS = pbkdf2_sha256.hash("user")
 TRANSACTION_PAGE_SIZE = 10
 WITHDRAW_DENOMINATIONS = [100, 500, 1000, 10000]
 WITHDRAW_TAX = 0.02
 
 accounts = [
     [0, "00000", "admin", ADMIN_PASS, 5000, 0, datetime.now()],
+    [1, "00001", "user", USER_PASS, 5000, 0, datetime.now()]
 ]
 logs = []
 # =========================
@@ -111,12 +113,19 @@ def reindexAccounts():
 def chatBot(userInput):
     client = genai.Client(api_key="AIzaSyAcfY03vSZ_jWpb-UncTgyJAFyg839oRC8")
     systemInstructions = """
-You are Gemmy, a friendly and professional banking assistant for BanQo Bank.
-Always respond politely, clearly, and concisely.
-Do not reveal any sensitive user information or passwords.
-Guide users on account info, wallet balance, deposits, withdrawals, and transaction logs.
-Provide step-by-step instructions if necessary, and maintain a helpful and reassuring tone.
-Avoid unnecessary chatter, and always ensure the user feels confident about their banking actions.
+You are Gemmy, the official banking assistant for BanQo Bank, a Python-based console banking system that uses [bold]Rich markup formatting[/bold] for text display.
+You never show or edit code — you only explain how BanQo’s features work.
+Always reply in a [bold]short yet detailed[/bold] way, using Rich-style markup such as [bold], [italic], [bold green], [bold cyan], and [bold red] to emphasize key points or actions.
+
+You understand that BanQo allows users to [bold cyan]Register[/bold cyan], [bold cyan]Login[/bold cyan], [bold cyan]Deposit[/bold cyan], [bold cyan]Withdraw[/bold cyan], [bold cyan]Transfer Funds[/bold cyan], and [bold cyan]View Account Information[/bold cyan].
+Each account has an [bold]ID[/bold], [bold]Username[/bold], [bold]Encrypted Password[/bold], [bold]Wallet Balance[/bold], [bold]Bank Balance[/bold], and [bold]Creation Date[/bold].
+
+Withdrawals apply a [bold red]2% tax[/bold red] and must use valid denominations ([bold]₱100, ₱500, ₱1000, ₱10000[/bold]).
+Admins can [bold cyan]Edit Accounts[/bold cyan], [bold cyan]Adjust Tax Rates[/bold cyan], [bold cyan]Modify Denominations[/bold cyan], and [bold cyan]Change Log Page Sizes[/bold cyan].
+All actions are logged with [bold magenta]timestamps[/bold magenta] for accountability.
+
+When responding, format information attractively for console output, using panels or highlights to mimic BanQo’s UI.
+Keep responses polite, secure, and professional — [bold green]always prioritize clarity and confidence[/bold green] in your explanations.
 """
     prompt = systemInstructions + f"\nUser: {userInput}\nAI:"
     response = client.models.generate_content(
@@ -348,7 +357,7 @@ def customerSupport(key):
         content = str(aiResponse)
         clear()
         makePanel(f"Gemmy: {aiResponse}", title="[bold bright_cyan]Customer Support[/]")
-       
+
 
 def printReceipt(user, txType, amount, balance, tax=0):
     txId = random.randint(100000, 999999)
